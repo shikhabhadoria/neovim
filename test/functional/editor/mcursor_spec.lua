@@ -2346,6 +2346,16 @@ describe('multicursor', function()
       feed('jQk')
       feed('gvrZ') -- Not Normal-mode "rZ".
       eq({ 'ZZ bb', 'ZZ dd', 'ee ff' }, get_lines())
+      clear_cursors()
+      cursors({ 'aa bb', 'cc dd', 'ee ff' }, 'Qj')
+      feed('viw<Esc>')
+      feed('jQk')
+      feed('gvo<Esc>') -- Not Normal-mode "o" during mc_vsel_refresh #42821.
+      eq({ 'aa bb', 'cc dd', 'ee ff' }, get_lines())
+      clear_cursors()
+      cursors({ 'aaaaa bbbbb' }, 'QwQq=')
+      feed('viwo<Esc>gvo<Esc>')
+      eq({ 'aaaaa bbbbb' }, get_lines())
 
       -- Per-cursor "gv" + Insert-entering cmd ("gvc…").
       clear_cursors()

@@ -469,6 +469,14 @@ done:
   const handle_T bufnr = sb.primary.buf;  // mc_sandbox_leave() frees `sb.primary`.
   mc_sandbox_leave(&sb);
 
+  for (size_t ci = 0; mcursor != 0 && handle_get_buffer(bufnr) == curbuf
+       && ci < kv_size(mc_cursors); ci++) {
+    if (kv_A(mc_cursors, ci).buf == bufnr && kv_A(mc_cursors, ci).mark == mcursor) {
+      ctx_save(&kv_A(mc_cursors, ci), edits ? kCtxVisual | kCtxMarks | kCtxCursor : kCtxCursor);
+      break;
+    }
+  }
+
   mc_cleanup(true, &curwin->w_cursor, mcursor);
   if (handle_get_buffer(bufnr) == curbuf && !curbuf->b_u_synced
       && curbuf->b_u_newhead != NULL) {
@@ -1096,7 +1104,8 @@ void mc_vsel_refresh(void)
 
   for (size_t i = 0; i < kv_size(mc_cursors); i++) {
     Context *ctx = &kv_A(mc_cursors, i);
-    if (!mc_ctx_resolve(ctx, &ctx->pos)) {
+    if (!mc_ctx_resolve(ctx, &ctx->pos)
+        || (ctx->visual.vi_start.lnum == 0 && strncmp(span.data, "gv", 2) == 0)) {
       continue;
     }
     ctx_load(ctx, kCtxCursor | kCtxVisual | kCtxMarks, 0);
